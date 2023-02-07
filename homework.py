@@ -9,7 +9,7 @@ import logging
 from dotenv import load_dotenv
 from http import HTTPStatus
 
-from exceptions import ServerError, KeyNotFound
+from exceptions import ServerError, KeyNotFound, UnknownStatus, MissingVariable
 
 load_dotenv()
 
@@ -114,7 +114,7 @@ def parse_status(homework):
     except KeyError as error:
         message = f'Неизвестный статус домашней работы: {error}'
         logger.error(message)
-        raise exceptions.UnknownStatus(message)
+        raise UnknownStatus(message)
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -135,7 +135,7 @@ def main() -> None:
     if not check_tokens():
         message = 'Отсутствует одна из переменных окружения'
         logger.critical(message + '\nПрограмма остановлена.')
-        raise exceptions.MissingVariable(message)
+        raise MissingVariable(message)
 
     try:
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
