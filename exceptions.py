@@ -1,10 +1,28 @@
-class NotStatusOkException(Exception):
-    """Исключение статуса ответа."""
+class ServerError(Exception):
+    """Исключение, если битая ссылка."""
 
     pass
 
 
-class NotTokenException(Exception):
-    """Исключение - нет всех токенов."""
+class MissingVariable(Exception):
+    pass
 
+
+class UnknownStatus(Exception):
+    pass
+
+
+class KeyNotFound(Exception):
+    pass
+
+
+class ConnectionError(Exception):
+    pass
+
+
+class Timeout(Exception):
+    pass
+
+
+class RequestException(Exception):
     pass
