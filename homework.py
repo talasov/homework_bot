@@ -39,7 +39,8 @@ HOMEWORK_VERDICTS = {
 
 def check_tokens():
     """Проверяет доступ к переменным окружения, необходимых для работы бота."""
-    return PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
+    list_of_token = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
+    return all(list_of_token)
 
 
 def send_message(bot, message) -> None:
