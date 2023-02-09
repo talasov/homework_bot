@@ -9,8 +9,7 @@ import logging
 from dotenv import load_dotenv
 from http import HTTPStatus
 
-from exceptions import ServerError, KeyNotFound, UnknownStatus, MissingVariable, EmptyDictionaryOrListError, \
-    UndocumentedStatusError
+from exceptions import ServerError, UnknownStatus, MissingVariable
 
 load_dotenv()
 
