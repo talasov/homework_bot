@@ -26,3 +26,11 @@ class Timeout(Exception):
 
 class RequestException(Exception):
     pass
+
+
+class EmptyDictionaryOrListError(Exception):
+    pass
+
+
+class UndocumentedStatusError(Exception):
+    pass

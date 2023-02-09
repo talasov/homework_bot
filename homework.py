@@ -9,7 +9,8 @@ import logging
 from dotenv import load_dotenv
 from http import HTTPStatus
 
-from exceptions import ServerError, KeyNotFound, UnknownStatus, MissingVariable
+from exceptions import ServerError, KeyNotFound, UnknownStatus, MissingVariable, EmptyDictionaryOrListError, \
+    UndocumentedStatusError
 
 load_dotenv()
 
@@ -38,13 +39,8 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    """Проверяет наличие токенов."""
-    flag = all([
-        PRACTICUM_TOKEN is not None,
-        TELEGRAM_TOKEN is not None,
-        TELEGRAM_CHAT_ID is not None
-    ])
-    return flag
+    """Проверяет доступ к переменным окружения, необходимых для работы бота."""
+    return PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
 
 
 def send_message(bot, message) -> None:
@@ -65,12 +61,8 @@ def get_api_answer(timestamp):
     try:
         logging.info('Отправляю запрос к API ЯндексПрактикума')
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    except requests.exceptions.ConnectionError as connect_error:
+    except Exception as connect_error:
         raise logger.error('Ошибка подключения:', connect_error)
-    except requests.exceptions.Timeout as timout_error:
-        raise logger.error('Время запроса вышло', timout_error)
-    except requests.exceptions.RequestException as request_error:
-        raise logger.error(request_error)
     if response.status_code != HTTPStatus.OK:
         logger.error('Недоступность эндпоинта')
         raise ServerError()
@@ -82,20 +74,28 @@ def get_api_answer(timestamp):
 
 def check_response(response: dict) -> list:
     """Проверка корректности ответа API."""
-    if isinstance(response, dict):
-        try:
-            homework = response['homeworks']
-        except KeyError as error:
-            message = f'В ответе не обнаружен ключ {error}'
-            logger.error(message)
-            raise KeyNotFound(message)
-        if not isinstance(homework, list):
-            raise TypeError('Ответ не содержит список домашних работ')
-        message = 'Получены сведения о последней домашней работе'
-        logger.info(message) if len(homework) else None
-        return homework
-    else:
-        raise TypeError('В ответе API не обнаружен словарь')
+    if not isinstance(response, dict):
+        raise TypeError(
+            f'Ответ сервиса не является словарем. Ответ сервиса {response}.'
+        )
+
+    if not response.get('current_date'):
+        raise KeyError('В полученном ответе отсутствует ключ `current_date`.')
+
+    if not response.get('homeworks'):
+        raise KeyError('В полученном ответе отсутствует ключ `homeworks`.')
+
+    homeworks = response.get('homeworks')
+    if not isinstance(homeworks, list):
+        raise TypeError(
+            f'Значение по ключу `homeworks` не является списком.'
+            f'Ответ сервиса: {homeworks}'
+        )
+
+    if not homeworks:
+        raise IndexError('Значение по ключу `homeworks` - пустой список.')
+
+    return homeworks
 
 
 def parse_status(homework):
@@ -159,16 +159,15 @@ def main() -> None:
             else:
                 logger.debug('Статус домашней работы не изменился')
             timestamp = response.get('current_date')
-            time.sleep(RETRY_PERIOD)
 
         except Exception as error:
             if str(error) != last_error:
                 message = f'Сбой в работе программы: {error}'
                 send_message(bot, message)
                 last_error = str(error)
-                time.sleep(RETRY_PERIOD)
-            else:
-                time.sleep(RETRY_PERIOD)
+
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
