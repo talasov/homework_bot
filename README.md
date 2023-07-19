@@ -29,16 +29,10 @@ TELEGRAM_TOKEN = токен вашего бота Telegram полученный 
 TELEGRAM_CHAT_ID = id вашего чата в Telegram.
 ```
 
-Cоздать образ из Docker файла:
+Запускаем бота 
 
 ```
-docker build -t homework_bot .
-```
-
-Запустите Docker контейнер:
-
-```
-docker run --name homework_bot homework_bot
+python homework_bot.py
 ```
 
 ### Получаем токены:
